@@ -13,21 +13,29 @@ var SitePicker = React.createClass({
     })
   },
   useFilter(data, filterText) {
+    var filterText = filterText.toLowerCase();
     if (!filterText) {
-      return this.props.data
+      return data
     }
-    var result = [];
-    var uniqMap = [];
-    data.forEach((subject) => {
-      subject.sites.forEach((site) => {
-        if (~site.name.indexOf(filterText) !== 0) {
-          // SOME MAGIC
-          // result.push(subject);
-          // uniqMap.push(site.name);
+    var result = JSON.parse(JSON.stringify(data));
+
+    result.forEach((subject, subject_index) => {
+      subject.sites.forEach((site, site_index) => {
+        if (!site.name.toLowerCase().includes(filterText)) {
+          subject.sites[site_index] = null;
         }
       })
     })
-    console.log(result);
+
+    result.forEach((subject) => {
+      subject.sites = subject.sites.filter((site) => {
+        return (site !== null) ? true : false
+      })
+    })
+
+    result = result.filter((subject) => {
+      return (subject.sites.length) ? true : false
+    });
     return result;
   },
   render(){
@@ -93,11 +101,14 @@ var SubjectList = React.createClass({
 })
 
 var SubjectItem = React.createClass({
+  pickItem(item){
+    console.log(item);
+  },
   render(){
     var sites = this.props.sites;
     var list = [];
     sites.forEach((site) => {
-      list.push(<Site name={site.name} image={site.image} key={site.name} />)
+      list.push(<Site pickItem={this.pickItem} name={site.name} image={site.image} key={site.name} />)
     });
     return (
       <div className="pad__block">
@@ -112,12 +123,16 @@ var SubjectItem = React.createClass({
 });
 
 var Site = React.createClass({
+  pickItem(e){
+    e.preventDefault();
+    this.props.pickItem(e.target.dataset.name)
+  },
   render(){
     return (
       <li className="pad__item">
           <a className="pad__source" href="">
               {this.props.image ? <img style={{width: '100px'}} src={this.props.image} /> : null}
-              <span className="pad__source__name">{this.props.name}</span>
+              <span data-name={this.props.name} onClick={this.pickItem}  className="pad__source__name">{this.props.name}</span>
           </a>
       </li>
     )
